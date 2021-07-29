@@ -17,10 +17,7 @@
 package com.example.android.trackmysleepquality.sleeptracker
 
 import android.app.Application
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.Transformations
+import androidx.lifecycle.*
 import com.example.android.trackmysleepquality.database.SleepDatabaseDao
 import com.example.android.trackmysleepquality.database.SleepNight
 import com.example.android.trackmysleepquality.formatNights
@@ -33,9 +30,9 @@ class SleepTrackerViewModel(
         val database: SleepDatabaseDao,
         application: Application) : AndroidViewModel(application) {
 
-    private var viewModelJob = Job()
+    /*private var viewModelJob = Job()
 
-    private val uiScope = CoroutineScope(Dispatchers.Main + viewModelJob)
+    private val uiScope = CoroutineScope(Dispatchers.Main + viewModelJob)*/
 
     private var tonight = MutableLiveData<SleepNight?>()
 
@@ -70,7 +67,7 @@ class SleepTrackerViewModel(
     }
 
     private fun initializeTonight() {
-        uiScope.launch {
+        viewModelScope.launch {
             tonight.value = getTonightFromDatabase()
         }
     }
@@ -88,7 +85,7 @@ class SleepTrackerViewModel(
     }
 
     fun onStartTracking() {
-        uiScope.launch {
+        viewModelScope.launch {
             val newNight = SleepNight()
             insert(newNight)
             tonight.value = getTonightFromDatabase()
@@ -102,7 +99,7 @@ class SleepTrackerViewModel(
     }
 
     fun onStopTracking() {
-        uiScope.launch {
+        viewModelScope.launch {
             val oldNight = tonight.value ?: return@launch
             oldNight.endTimeMilli = System.currentTimeMillis()
             update(oldNight)
@@ -118,7 +115,7 @@ class SleepTrackerViewModel(
     }
 
     fun onClear() {
-        uiScope.launch {
+        viewModelScope.launch {
             clear()
             tonight.value = null
 
@@ -140,10 +137,22 @@ class SleepTrackerViewModel(
         _showSnackBarEvent.value = false
     }
 
-    override fun onCleared() {
+    /*override fun onCleared() {
         super.onCleared()
         onClear()
         viewModelJob.cancel()
+    }*/
+
+    private val _navigateToSleepDataQuality = MutableLiveData<Long>()
+    val navigateToSleepDataQuality
+        get() = _navigateToSleepDataQuality
+
+    fun onSleepNightClicked(nightId: Long) {
+        _navigateToSleepDataQuality.value = nightId
+    }
+
+    fun onSleepDataQualityNavigated() {
+        _navigateToSleepDataQuality.value = null
     }
 }
 
